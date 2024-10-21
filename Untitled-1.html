@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아기 성격 테스트 및 수면 방법 제안</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f5ff;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #3a86ff;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        .question {
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        .option {
+            flex: 1;
+            margin: 0 5px;
+        }
+        .option input[type="radio"] {
+            display: none;
+        }
+        .option label {
+            display: block;
+            padding: 10px 5px;
+            height: 40px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 14px;
+        }
+        .option label:hover {
+            background-color: #dee2e6;
+        }
+        .option input[type="radio"]:checked + label {
+            background-color: #3a86ff;
+            color: white;
+        }
+        button {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            background-color: #3a86ff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2a75e6;
+        }
+        #result {
+            display: none;
+            text-align: center;
+        }
+        #resultBox {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+        #personalityType {
+            font-size: 2em;
+            color: #3a86ff;
+            margin-bottom: 20px;
+        }
+        #sleepAdvice {
+            text-align: left;
+            margin-top: 20px;
+        }
+        #sleepAdvice h3 {
+            color: #3a86ff;
+        }
+        #sleepAdvice ul {
+            padding-left: 20px;
+        }
+        #quiz, #retakeButton {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>아기 성격 테스트 및 수면 방법 제안</h1>
+        <div id="intro">
+            <p>이 테스트는 당신의 아기의 성격을 파악하고 그에 맞는 수면 방법을 제안해 드립니다. 각 질문에 가장 적합한 답변을 선택해 주세요.</p>
+            <button onclick="startQuiz()">테스트 시작하기</button>
+        </div>
+        <div id="quiz"></div>
+        <button id="submitButton" onclick="calculateResult()" style="display:none;">결과 보기</button>
+        <div id="result"></div>
+        <button id="retakeButton" onclick="retakeQuiz()">다시 테스트하기</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "우리 아기는 새로운 환경에 쉽게 적응하나요?",
+                options: ["매우 그렇다", "그렇다", "보통이다", "그렇지 않다", "전혀 그렇지 않다"]
+            },
+            {
+                question: "아기가 울 때 달래기가 쉬운 편인가요?",
+                options: ["매우 쉽다", "쉬운 편이다", "보통이다", "어려운 편이다", "매우 어렵다"]
+            },
+            {
+                question: "아기가 잠들 때 주변 소음에 민감한 편인가요?",
+                options: ["전혀 민감하지 않다", "민감하지 않은 편이다", "보통이다", "민감한 편이다", "매우 민감하다"]
+            },
+            {
+                question: "아기가 새로운 사람을 만났을 때 반응은 어떤가요?",
+                options: ["매우 좋아한다", "좋아한다", "보통이다", "좋아하지 않는다", "매우 좋아하지 않는다"]
+            },
+            {
+                question: "아기의 수면 시간이 규칙적인 편인가요?",
+                options: ["매우 규칙적이다", "규칙적인 편이다", "보통이다", "불규칙적인 편이다", "매우 불규칙적이다"]
+            },
+            {
+                question: "아기가 놀이나 활동을 할 때 에너지 수준은 어떤가요?",
+                options: ["매우 활발하다", "활발한 편이다", "보통이다", "조용한 편이다", "매우 조용하다"]
+            },
+            {
+                question: "아기가 배고프거나 불편할 때 얼마나 빨리 반응하나요?",
+                options: ["매우 빠르게", "빠른 편이다", "보통이다", "느린 편이다", "매우 느리게"]
+            },
+            {
+                question: "아기가 낮잠을 자려고 할 때 얼마나 쉽게 잠드나요?",
+                options: ["매우 쉽게", "쉬운 편이다", "보통이다", "어려운 편이다", "매우 어렵게"]
+            },
+            {
+                question: "아기가 새로운 음식이나 질감에 대해 어떻게 반응하나요?",
+                options: ["매우 좋아한다", "좋아하는 편이다", "보통이다", "싫어하는 편이다", "매우 싫어한다"]
+            },
+            {
+                question: "아기가 일상적인 변화(예: 옷 갈아입기, 기저귀 갈기)에 어떻게 반응하나요?",
+                options: ["매우 협조적이다", "협조적인 편이다", "보통이다", "저항하는 편이다", "매우 저항한다"]
+            }
+        ];
+
+        function startQuiz() {
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('quiz').style.display = 'block';
+            document.getElementById('submitButton').style.display = 'block';
+            createQuiz();
+        }
+
+        function createQuiz() {
+            const quizContainer = document.getElementById('quiz');
+            questions.forEach((questionObj, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <p>${index + 1}. ${questionObj.question}</p>
+                    <div class="options">
+                        ${questionObj.options.map((option, i) => `
+                            <div class="option">
+                                <input type="radio" id="q${index}o${i}" name="q${index}" value="${i + 1}">
+                                <label for="q${index}o${i}" title="${option}">${option}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                quizContainer.appendChild(questionDiv);
+            });
+        }
+
+        function calculateResult() {
+            let uncheckedQuestion = null;
+            questions.forEach((_, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                if (!selected && uncheckedQuestion === null) {
+                    uncheckedQuestion = index;
+                }
+            });
+
+            if (uncheckedQuestion !== null) {
+                alert('모든 문항을 체크했나요? 다시 확인해 보세요.');
+                document.querySelectorAll('.question')[uncheckedQuestion].scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            let score = 0;
+            questions.forEach((_, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                score += parseInt(selected.value);
+            });
+
+            let personalityType, personalityDescription, sleepAdvice;
+
+            if (score >= 10 && score <= 20) {
+                personalityType = "활발한 아기";
+                personalityDescription = "활발한 아기는 에너지가 넘치고 호기심이 많습니다. 새로운 경험을 좋아하며 빠르게 적응합니다. 하지만 때로는 과도한 자극으로 인해 잠들기 어려워할 수 있습니다.";
+                sleepAdvice = [
+                    "일관된 취침 루틴을 만들어 에너지를 점진적으로 낮추세요.",
+                    "잠들기 1-2시간 전부터 활동 강도를 줄이고 조용한 놀이를 하세요.",
+                    "취침 30분 전에는 조용한 책 읽기나 자장가를 들려주세요.",
+                    "방을 어둡게 하고 백색 소음을 사용해 보세요.",
+                    "낮 동안 충분한 신체 활동을 할 수 있게 해주세요.",
+                    "규칙적인 낮잠 시간을 정해 과도한 피로를 예방하세요."
+                ];
+            } else if (score >= 21 && score <= 30) {
+                personalityType = "순응적인 아기";
+                personalityDescription = "순응적인 아기는 대체로 온순하고 적응력이 좋습니다. 새로운 상황에 잘 대처하며 수면 패턴도 비교적 안정적입니다. 하지만 때로는 자신의 욕구를 표현하는 데 어려움을 겪을 수 있습니다.";
+                sleepAdvice = [
+                    "규칙적인 수면 스케줄을 유지하세요.",
+                    "편안하고 안정적인 수면 환경을 제공하세요.",
+                    "부드러운 음악이나 백색 소음을 사용해 보세요.",
+                    "취침 전 부드러운 마사지로 릴랙스 시간을 가져보세요.",
+                    "낮 동안 충분한 상호작용과 자극을 제공하세요.",
+                    "아기의 작은 신호에도 민감하게 반응해 주세요."
+                ];
+            } else if (score >= 31 && score <= 40) {
+                personalityType = "조용한 아기";
+                personalityDescription = "조용한 아기는 차분하고 관찰력이 뛰어납니다. 혼자 놀기를 좋아하며 새로운 환경에 천천히 적응합니다. 수면에 들어가는 시간이 오래 걸릴 수 있지만, 한번 잠들면 깊게 잡니다.";
+                sleepAdvice = [
+                    "천천히 잠들 수 있도록 충분한 시간을 주세요.",
+                    "부드러운 마사지나 스킨십으로 안정감을 주세요.",
+                    "조용하고 차분한 취침 루틴을 만드세요.",
+                    "아기가 좋아하는 특정 인형이나 담요를 함께 재우세요.",
+                    "낮 동안 충분한 빛과 자극에 노출시켜 주세요.",
+                    "아기의 페이스를 존중하며 서두르지 마세요."
+                ];
+            } else {
+                personalityType = "예민한 아기";
+                personalityDescription = "예민한 아기는 주변 환경의 작은 변화에도 민감하게 반응합니다. 새로운 상황에 적응하는 데 시간이 걸리며, 수면 패턴이 불규칙할 수 있습니다. 하지만 동시에 매우 직관적이고 창의적인 성향을 가지고 있습니다.";
+                sleepAdvice = [
+                    "외부 자극을 최소화한 수면 환경을 만드세요.",
+                    "일관된 취침 시간과 루틴을 엄격히 지키세요.",
+                    "아기를 달래는 특별한 방법(예: 특정 노래, 담요 등)을 찾아 활용하세요.",
+                    "점진적인 방법으로 새로운 상황에 적응할 수 있게 도와주세요.",
+                    "과도한 자극을 피하고 조용한 활동을 통해 에너지를 조절하세요.",
+                    "아기의 감정을 인정하고 공감해 주는 시간을 가지세요."
+                ];
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div id="resultBox">
+                    <h2 id="personalityType">${personalityType}</h2>
+                    <p>${personalityDescription}</p>
+                    <div id="sleepAdvice">
+                        <h3>수면 방법 제안:</h3>
+                        <ul>
+                            ${sleepAdvice.map(advice => `<li>${advice}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('submitButton').style.display = 'none';
+            document.getElementById('retakeButton').style.display = 'block';
+        }
+
+        function retakeQuiz() {
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('retakeButton').style.display = 'none';
+            document.getElementById('quiz').innerHTML = '';
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
